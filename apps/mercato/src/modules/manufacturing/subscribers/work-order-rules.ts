@@ -1,17 +1,17 @@
-import type { EntityManager } from '@mikro-orm/postgresql'
+import type { EntityManager, FilterQuery } from '@mikro-orm/postgresql'
 import { executeRules, type RuleEngineContext } from '@open-mercato/core'
 import { WorkOrder } from '../data/entities'
-import type { FilterQuery } from '@mikro-orm/postgresql'
 
 export const metadata = {
   event: 'manufacturing.work_order.updated',
   persistent: true,
-  id: 'manufacturing:work-order-rules',
+  id: 'manufacturing:work-order-updated-rules',
 }
 
-export default async function handler(
+export async function runWorkOrderRules(
   payload: { id: string; tenantId: string; organizationId: string },
   ctx: { resolve: <T = unknown>(name: string) => T },
+  eventType: string,
 ) {
   const em = ctx.resolve<EntityManager>('em')
 
@@ -25,9 +25,9 @@ export default async function handler(
   if (!workOrder) return
 
   const context: RuleEngineContext = {
-    entityType: 'manufacturing.work_order',
+    entityType: 'WorkOrder',
     entityId: workOrder.id,
-    eventType: 'updated',
+    eventType,
     data: {
       id: workOrder.id,
       wo_number: workOrder.woNumber,
@@ -46,4 +46,11 @@ export default async function handler(
   }
 
   await executeRules(em, context)
+}
+
+export default async function handler(
+  payload: { id: string; tenantId: string; organizationId: string },
+  ctx: { resolve: <T = unknown>(name: string) => T },
+) {
+  await runWorkOrderRules(payload, ctx, 'afterUpdate')
 }
