@@ -1,6 +1,6 @@
 import type { SyncCrudEventPayload, SyncCrudEventResult } from '@open-mercato/shared/lib/crud/sync-event-types'
 import type { EntityManager } from '@mikro-orm/postgresql'
-import { executeRules, type RuleEngineContext } from '@open-mercato/core'
+import { executeRules, type RuleEngineContext } from '@open-mercato/core/modules/business_rules'
 
 /**
  * Sync before-update subscriber: runs business rules engine with

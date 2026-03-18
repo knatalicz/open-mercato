@@ -1,5 +1,5 @@
 import type { EntityManager, FilterQuery } from '@mikro-orm/postgresql'
-import { executeRules, type RuleEngineContext } from '@open-mercato/core'
+import { executeRules, type RuleEngineContext } from '@open-mercato/core/modules/business_rules'
 import { WorkOrder } from '../data/entities'
 
 export const metadata = {
