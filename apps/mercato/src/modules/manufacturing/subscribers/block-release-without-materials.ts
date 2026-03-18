@@ -1,36 +1,62 @@
 import type { SyncCrudEventPayload, SyncCrudEventResult } from '@open-mercato/shared/lib/crud/sync-event-types'
+import type { EntityManager } from '@mikro-orm/postgresql'
+import { executeRules, type RuleEngineContext } from '@open-mercato/core'
 
 /**
- * Sync before-update subscriber: prevents releasing a work order when
- * materials have not been confirmed as available.
+ * Sync before-update subscriber: runs business rules engine with
+ * entityType 'WorkOrder' and eventType 'beforeUpdate'.
  *
- * Required for AS 9100 material traceability compliance.
+ * GUARD-type rules (e.g. "block release without materials") will
+ * cause allowed=false, rejecting the update with 422.
  */
 export const metadata = {
   event: 'manufacturing.work_order.updating',
   sync: true,
   priority: 50,
-  id: 'manufacturing:block-release-without-materials',
+  id: 'manufacturing:work-order-before-update-rules',
 }
 
 export default async function handler(
   payload: SyncCrudEventPayload,
+  ctx: { resolve: <T = unknown>(name: string) => T },
 ): Promise<SyncCrudEventResult | void> {
   const body = payload.payload
   if (!body || typeof body !== 'object') return
 
-  const newStatus = ('status' in body ? body.status : undefined) as string | undefined
-  if (newStatus !== 'RELEASED') return
+  const em = ctx.resolve<EntityManager>('em')
 
-  const materialsAvailable =
-    ('materials_available' in body ? body.materials_available : undefined) ??
-    payload.previousData?.materials_available ??
-    payload.previousData?.materialsAvailable
+  const merged = { ...payload.previousData, ...body }
 
-  if (!materialsAvailable) {
+  const context: RuleEngineContext = {
+    entityType: 'WorkOrder',
+    entityId: payload.resourceId ?? undefined,
+    eventType: 'beforeUpdate',
+    data: {
+      id: payload.resourceId,
+      wo_number: merged.wo_number ?? merged.woNumber,
+      status: merged.status,
+      customer_entity_id: merged.customer_entity_id ?? merged.customerEntityId ?? null,
+      customer_name: merged.customer_name ?? merged.customerName ?? null,
+      industry: merged.industry ?? null,
+      priority: merged.priority,
+      material: merged.material ?? null,
+      quantity: merged.quantity ?? null,
+      due_date: merged.due_date ?? merged.dueDate ?? null,
+      materials_available: merged.materials_available ?? merged.materialsAvailable ?? false,
+    },
+    tenantId: payload.tenantId ?? '',
+    organizationId: payload.organizationId ?? '',
+  }
+
+  const result = await executeRules(em, context)
+
+  if (!result.allowed) {
+    const messages = result.executedRules
+      .filter(r => !r.conditionResult && r.rule?.ruleType === 'GUARD')
+      .map(r => r.rule?.ruleName ?? r.error ?? 'Rule blocked')
     return {
       ok: false,
-      message: 'Cannot release work order to production: materials have not been confirmed as available (AS 9100 requirement)',
+      message: messages.join('; ') || 'Blocked by business rules',
       status: 422,
     }
   }
