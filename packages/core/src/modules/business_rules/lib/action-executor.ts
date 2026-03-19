@@ -387,12 +387,30 @@ async function handleCallWebhook(
     )
   }
 
+  const interpolatedBody = body ? interpolateMessage(
+    typeof body === 'string' ? body : JSON.stringify(body),
+    context,
+  ) : undefined
+
+  const parsedHeaders = typeof headers === 'string' ? JSON.parse(headers) : headers
+
+  try {
+    const response = await fetch(url, {
+      method: method.toUpperCase(),
+      headers: parsedHeaders,
+      body: interpolatedBody,
+    })
+    console.log(`[RULE ACTION] CALL_WEBHOOK ${method.toUpperCase()} ${url} → ${response.status}`)
+  } catch (err) {
+    console.error(`[RULE ACTION] CALL_WEBHOOK ${method.toUpperCase()} ${url} failed:`, err)
+  }
+
   return {
     type: 'CALL_WEBHOOK',
     url,
     method: method.toUpperCase(),
-    headers,
-    body,
+    headers: parsedHeaders,
+    body: interpolatedBody,
     status: 'pending',
   }
 }
