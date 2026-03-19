@@ -136,6 +136,13 @@ export async function GET(req: Request) {
     { tenantId: auth.tenantId ?? null, organizationId: auth.orgId ?? null },
   )
 
+  const sanitize = (val: unknown): unknown => {
+    if (typeof val === 'bigint') return Number(val)
+    if (Array.isArray(val)) return val.map(sanitize)
+    if (val && typeof val === 'object') return Object.fromEntries(Object.entries(val).map(([k, v]) => [k, sanitize(v)]))
+    return val
+  }
+
   const items = rows.map((log) => ({
     id: String(log.id),
     ruleId: log.rule.id,
@@ -144,19 +151,20 @@ export async function GET(req: Request) {
     entityId: log.entityId,
     entityType: log.entityType,
     executionResult: log.executionResult,
-    inputContext: log.inputContext ?? null,
-    outputContext: log.outputContext ?? null,
+    inputContext: sanitize(log.inputContext) ?? null,
+    outputContext: sanitize(log.outputContext) ?? null,
     errorMessage: log.errorMessage ?? null,
-    executionTimeMs: log.executionTimeMs,
+    executionTimeMs: Number(log.executionTimeMs),
     executedAt: log.executedAt.toISOString(),
     tenantId: log.tenantId,
     organizationId: log.organizationId ?? null,
     executedBy: log.executedBy ?? null,
   }))
 
-  const totalPages = Math.max(1, Math.ceil(count / pageSize))
+  const totalCount = Number(count)
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
 
-  return NextResponse.json({ items, total: count, totalPages })
+  return NextResponse.json({ items, total: totalCount, totalPages })
 }
 
 export const openApi: OpenApiRouteDoc = {
