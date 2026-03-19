@@ -82,8 +82,15 @@ export async function GET(_req: Request, ctx: { params?: { id?: string } }) {
     return NextResponse.json({ error: 'Log entry not found' }, { status: 404 })
   }
 
+  const sanitize = (val: unknown): unknown => {
+    if (typeof val === 'bigint') return Number(val)
+    if (Array.isArray(val)) return val.map(sanitize)
+    if (val && typeof val === 'object') return Object.fromEntries(Object.entries(val).map(([k, v]) => [k, sanitize(v)]))
+    return val
+  }
+
   const response = {
-    id: log.id,
+    id: String(log.id),
     rule: {
       id: log.rule.id,
       ruleId: log.rule.ruleId,
@@ -94,10 +101,10 @@ export async function GET(_req: Request, ctx: { params?: { id?: string } }) {
     entityId: log.entityId,
     entityType: log.entityType,
     executionResult: log.executionResult,
-    inputContext: log.inputContext ?? null,
-    outputContext: log.outputContext ?? null,
+    inputContext: sanitize(log.inputContext) ?? null,
+    outputContext: sanitize(log.outputContext) ?? null,
     errorMessage: log.errorMessage ?? null,
-    executionTimeMs: log.executionTimeMs,
+    executionTimeMs: Number(log.executionTimeMs),
     executedAt: log.executedAt.toISOString(),
     tenantId: log.tenantId,
     organizationId: log.organizationId ?? null,
