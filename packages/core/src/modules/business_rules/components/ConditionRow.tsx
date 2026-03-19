@@ -30,10 +30,19 @@ export function ConditionRow({ condition, onChange, onDelete, error }: Condition
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value
+    const trimmed = rawValue.trim()
 
-    // Try to parse as JSON for arrays/objects
     let parsedValue: any = rawValue
-    if (rawValue.trim().startsWith('[') || rawValue.trim().startsWith('{')) {
+
+    // Parse booleans
+    if (trimmed === 'true') parsedValue = true
+    else if (trimmed === 'false') parsedValue = false
+    // Parse numbers
+    else if (trimmed !== '' && !isNaN(Number(trimmed)) && !trimmed.startsWith('0') || trimmed === '0') {
+      parsedValue = Number(trimmed)
+    }
+    // Try to parse as JSON for arrays/objects
+    else if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
       try {
         parsedValue = JSON.parse(rawValue)
       } catch {

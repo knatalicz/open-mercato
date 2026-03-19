@@ -230,7 +230,7 @@ function equals(left: any, right: any): boolean {
   if (left == null && right == null) return true
   if (left == null || right == null) return false
 
-  // Type coercion for booleans (UI stores "true"/"false" as strings)
+  // Type coercion for booleans (handles legacy string "true"/"false" values)
   if (typeof left === 'boolean' || typeof right === 'boolean') {
     return toBoolean(left) === toBoolean(right)
   }
@@ -244,12 +244,9 @@ function equals(left: any, right: any): boolean {
   return left === right
 }
 
-function toBoolean(value: any): boolean {
+function toBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value
-  if (typeof value === 'string') {
-    const lower = value.toLowerCase().trim()
-    return lower === 'true' || lower === '1' || lower === 'yes'
-  }
+  if (typeof value === 'string') return value.toLowerCase().trim() === 'true'
   if (typeof value === 'number') return value !== 0
   return Boolean(value)
 }
