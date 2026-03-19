@@ -50,15 +50,9 @@ export default async function handler(
 
   const result = await executeRules(em, context)
 
-  // GUARD rules: conditionResult=true means the "block" condition matched
-  // The engine sets allowed=false when NOT all guard conditions pass,
-  // but the business intent is: condition=true → block the operation.
-  const guardResults = result.executedRules.filter(r => r.rule?.ruleType === 'GUARD')
-  const blocked = guardResults.some(r => r.conditionResult)
-
-  if (blocked) {
-    const messages = guardResults
-      .filter(r => r.conditionResult)
+  if (!result.allowed) {
+    const messages = result.executedRules
+      .filter(r => !r.conditionResult && r.rule?.ruleType === 'GUARD')
       .map(r => r.rule?.ruleName ?? r.error ?? 'Rule blocked')
     return {
       ok: false,
