@@ -52,5 +52,6 @@ export default async function handler(
   payload: { id: string; tenantId: string; organizationId: string },
   ctx: { resolve: <T = unknown>(name: string) => T },
 ) {
+  console.log('[manufacturing] work-order-updated-rules subscriber fired for:', payload.id)
   await runWorkOrderRules(payload, ctx, 'afterUpdate')
 }
