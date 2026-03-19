@@ -230,6 +230,11 @@ function equals(left: any, right: any): boolean {
   if (left == null && right == null) return true
   if (left == null || right == null) return false
 
+  // Type coercion for booleans (UI stores "true"/"false" as strings)
+  if (typeof left === 'boolean' || typeof right === 'boolean') {
+    return toBoolean(left) === toBoolean(right)
+  }
+
   // Type coercion for numbers
   if (typeof left === 'number' || typeof right === 'number') {
     return Number(left) === Number(right)
@@ -237,6 +242,16 @@ function equals(left: any, right: any): boolean {
 
   // String comparison (case-sensitive)
   return left === right
+}
+
+function toBoolean(value: any): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const lower = value.toLowerCase().trim()
+    return lower === 'true' || lower === '1' || lower === 'yes'
+  }
+  if (typeof value === 'number') return value !== 0
+  return Boolean(value)
 }
 
 /**
