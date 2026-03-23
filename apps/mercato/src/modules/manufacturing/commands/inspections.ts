@@ -39,12 +39,12 @@ export const inspectionCrudEvents: CrudEventsConfig = {
       id: ctx.identifiers.id,
       tenantId: ctx.identifiers.tenantId,
       organizationId: ctx.identifiers.organizationId,
-      inspection_number: entity?.inspectionNumber ?? null,
-      work_order_ref: entity?.workOrderRef ?? null,
-      inspector_name: entity?.inspectorName ?? null,
+      inspectionNumber: entity?.inspectionNumber ?? null,
+      workOrderRef: entity?.workOrderRef ?? null,
+      inspectorName: entity?.inspectorName ?? null,
       result: entity?.result ?? null,
-      defect_description: entity?.defectDescription ?? null,
-      inspection_date: entity?.inspectionDate ?? null,
+      defectDescription: entity?.defectDescription ?? null,
+      inspectionDate: entity?.inspectionDate ?? null,
     }
   },
 }

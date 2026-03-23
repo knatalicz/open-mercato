@@ -38,11 +38,24 @@ export const workOrderCrudEvents: CrudEventsConfig = {
   module: 'manufacturing',
   entity: 'work_order',
   persistent: true,
-  buildPayload: (ctx: CrudEmitContext) => ({
-    id: ctx.identifiers.id,
-    tenantId: ctx.identifiers.tenantId,
-    organizationId: ctx.identifiers.organizationId,
-  }),
+  buildPayload: (ctx: CrudEmitContext) => {
+    const entity = ctx.entity as WorkOrder | undefined
+    return {
+      id: ctx.identifiers.id,
+      tenantId: ctx.identifiers.tenantId,
+      organizationId: ctx.identifiers.organizationId,
+      woNumber: entity?.woNumber ?? null,
+      status: entity?.status ?? null,
+      priority: entity?.priority ?? null,
+      industry: entity?.industry ?? null,
+      material: entity?.material ?? null,
+      quantity: entity?.quantity ?? null,
+      customerName: entity?.customerName ?? null,
+      customerEntityId: entity?.customerEntityId ?? null,
+      materialsAvailable: entity?.materialsAvailable ?? null,
+      dueDate: entity?.dueDate ?? null,
+    }
+  },
 }
 
 export const workOrderCrudIndexer: CrudIndexerConfig = {
