@@ -33,11 +33,20 @@ export const inspectionCrudEvents: CrudEventsConfig = {
   module: 'manufacturing',
   entity: 'inspection_record',
   persistent: true,
-  buildPayload: (ctx: CrudEmitContext) => ({
-    id: ctx.identifiers.id,
-    tenantId: ctx.identifiers.tenantId,
-    organizationId: ctx.identifiers.organizationId,
-  }),
+  buildPayload: (ctx: CrudEmitContext) => {
+    const entity = ctx.entity as InspectionRecord | undefined
+    return {
+      id: ctx.identifiers.id,
+      tenantId: ctx.identifiers.tenantId,
+      organizationId: ctx.identifiers.organizationId,
+      inspection_number: entity?.inspectionNumber ?? null,
+      work_order_ref: entity?.workOrderRef ?? null,
+      inspector_name: entity?.inspectorName ?? null,
+      result: entity?.result ?? null,
+      defect_description: entity?.defectDescription ?? null,
+      inspection_date: entity?.inspectionDate ?? null,
+    }
+  },
 }
 
 export const inspectionCrudIndexer: CrudIndexerConfig = {
